@@ -5,7 +5,7 @@ This package provides some simple utilities for working with functions. It's pur
 
 ## Available functions
 
-All functions are in the `Mkjp\FunctionUtils` namespace.
+All functions are in the `Mkjp\FunctionUtils` namespace. To import them into your code, use the `use function` syntax (PHP 5.6+).
 
 **`_()`**
 
@@ -69,7 +69,7 @@ $g = function($x1) {
 
 By default, `curry` "curries" all the **required** arguments of a function. If `$n` is given, the "cascade of functions" is only created for that many arguments. This is useful for functions that are variadic or have optional arguments.
 
-Since PHP doesn't currently support function call dereferencing (e.g. `$f(1)(2)(3)`), this is of limited use for stylistic purposes. However, functions that behave in this way (i.e. returning new functions until all their arguments are given) can be useful in functional programming.
+Since PHP doesn't currently support function call dereferencing (e.g. `$f(1)(2)(3)`), this is of limited use for stylistic purposes. However, functions that behave in this way (i.e. returning new functions until all their arguments are given) can be useful in functional programming (which is why all functions in Haskell are automatically curried).
 
 Example:
 
