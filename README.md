@@ -1,6 +1,15 @@
-# mkjpryor/function-utils
+# `mkjpryor/function-utils`
 
 This package provides some simple utilities for working with functions. It's purpose is to provide some of the core capabilities to enable a more functional style of programming.
+
+
+## Installation
+
+`mkjpryor/function-utils` can be installed via [Composer](https://getcomposer.org/):
+
+```bash
+php composer.phar require mkjpryor/function-utils dev-master
+```
 
 
 ## Available functions
