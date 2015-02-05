@@ -1,0 +1,26 @@
+{
+    "name" : "mkjpryor/function-utils",
+    "type" : "library",
+    "description" : "Function utilities for PHP",
+    "homepage" : "https://github.com/mkjpryor/function-utils",
+    "authors" : [
+        {
+            "name" : "Matt Pryor",
+            "email" : "matt@pryor.org.uk",
+            "role" : "Developer"
+        }
+    ],
+    "license" : "MIT",
+    
+    "require-dev" : {
+        "phpunit/phpunit" : "4.*"
+    },
+
+    "autoload" : {
+        "psr-4" : {
+            "Mkjp\\FunctionUtils\\" : "src"
+        },
+        
+        "files" : ["src/core.php"]
+    }
+}
