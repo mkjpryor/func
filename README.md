@@ -18,7 +18,77 @@ All functions are in the `Mkjp\FunctionUtils` namespace. To import them into you
 
 **`_()`**
 
-Returns a placeholder object for use with `partial` below.
+Returns a placeholder object for use with  below.
+
+----
+
+**`auto_bind(callable $f, $n = -1)`**
+
+Returns a new "auto-binding" function that continues to accept arguments for `$f`, including placeholders, until it has enough bound arguments to call `$f`.
+
+An argument is considered bound when a value has been supplied for it that is not a placeholder.
+
+By default, the returned function only waits for the *required* arguments of `$f` to be bound. If `$n` is given, it will wait for exactly that many arguments to be bound before calling `$f`.
+
+Example:
+
+```php
+function fun1($a, $b, $c, $d = 0) { return $a + $b + $c + $d; }
+
+// This only auto-binds the first 3 arguments
+$fn = auto_bind('fun1');
+
+// The following both print 6
+echo $fn(1, 2, 3);
+
+$tmp = $fn(1, _(), 3);
+echo $tmp(2);
+
+
+// This auto-binds all 4 arguments
+$fn = auto_bind('fun1', 4);
+
+// The following all print 10
+echo $fn(1, 2, 3, 4);
+
+$tmp = $fn(1, _(), 3);
+echo $tmp(2, 4);
+
+$tmp = $fn(1, _(), 3);  // This shows how the "auto-binding" function continues
+$tmp = $tmp(_(), 4);    // to accept arguments until it can call $f
+echo $tmp(2);
+```
+
+----
+
+**`bind(callable $f, ...$args)`**
+
+Returns a new "auto-bound" function (see above) with the first N arguments of `$f` bound to the given arguments.
+
+This is equivalent to, but possibly more efficient than, creating an "auto-bound" function from `$f` and calling it with the given arguments:
+
+```php
+$fn = auto_bind($f);
+return $fn(...$args);
+```
+
+Unlike `auto_bind`, `bind` will only work with functions of an unambiguous arity, i.e. optional and variadic arguments will *not* be considered.
+
+Example:
+
+```php
+function fun1($a, $b, $c, $d) { return $a + $b + $c + $d; }
+
+// The following all print 10
+echo fun1(1, 2, 3, 4);
+
+$tmp = bind('fun1', 1, _(), 3);
+echo $tmp(2, 4);
+
+$tmp = bind('fun1', 1, _(), 3);
+$tmp = $tmp(_(), 4);
+echo $tmp(2);
+```
 
 ----
 
@@ -76,7 +146,7 @@ $g = function($x1) {
 };
 ```
 
-By default, `curry` "curries" all the **required** arguments of a function. If `$n` is given, the "cascade of functions" is only created for that many arguments. This is useful for functions that are variadic or have optional arguments.
+By default, `curry` "curries" all the *required* arguments of a function. If `$n` is given, the "cascade of functions" is created for exactly that many arguments. This is useful for functions that are variadic or have optional arguments.
 
 Since PHP doesn't currently support function call dereferencing (e.g. `$f(1)(2)(3)`), this is of limited use for stylistic purposes. However, functions that behave in this way (i.e. returning new functions until all their arguments are given) can be useful in functional programming (which is why all functions in Haskell are automatically curried).
 
@@ -119,23 +189,20 @@ This is the classic id function. It just returns its argument.
 
 ----
 
-**`partial(callable $f, ...$frozen)`**
+**`n_required_args(callable $f)`**
 
-Returns a new function where the first N arguments of `$f` are "frozen" with the given arguments.
+Uses reflection to determine the number of required arguements for a callable.
 
-Any arguments for which a value is not given or for which the placeholder is given (see `_()` above) remain "free", and become arguments of the returned function.
+This will only consider *required* arguments, i.e. optional and variadic arguments do *not* contribute to the count.
 
 Example:
 
 ```php
-function fun1($a, $b, $c, $d) { return $a + $b - $c + $d; }
+function fun1($a, $b, $c, $d = 1) { return $a + $b + $c + $d; }
 
-// The following all print 4
-echo fun1(1, 2, 3, 4);
+echo n_required_args('fun1');  // Prints 3
 
-$fn = partial('fun1', 1, 2);
-echo $fn(3, 4);
+function fun2(...$args) { return count($args); }
 
-$fn = partial('fun1', 1, _(), 3);
-echo $fn(2, 4);
+echo n_required_args('fun2');  // Prints 0
 ```

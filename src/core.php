@@ -21,6 +21,36 @@ function _() {
 
 
 /**
+ * Returns a new function that continues to accept arguments to $f, including 
+ * placeholders, until it has enough arguments to call $f
+ * 
+ * By default, the returned function only waits for all the *required* arguments
+ * to be bound
+ * To auto-bind a function with optional or variadic arguments, the number of
+ * arguments to bind can be specified
+ * 
+ * See the README for example usage
+ */
+function auto_bind(callable $f, $n = -1) {
+    return new PartialFunction($f, [], $n);
+}
+
+
+/**
+ * Returns a new auto-bound function (see above) with the first N arguments bound
+ * to the given arguments
+ * 
+ * NOTE: This function will only work with functions of an unambiguous arity, i.e.
+ *       optional and variadic arguments will NOT be considered
+ *       For this, you must manually create an auto_bound function, specifying the
+ *       number of arguments to fill
+ */
+function bind(callable $f, ...$args) {
+    return new PartialFunction($f, $args);
+}
+
+
+/**
  * Returns a new function that is the composition of the given functions from left
  * to right, i.e. the result of the first gets passed to the second, etc.
  * 
@@ -80,7 +110,8 @@ function curry(callable $f, $n = -1) {
     // Otherwise return a new function that gathers the arguments
     // We know that $f takes at least 2 arguments
     return function($x) use($f, $n) {
-        return curry(partial($f, $x), $n - 1);
+        $fn = auto_bind($f, $n);
+        return curry($fn($x), $n - 1);
     };
 }
 
@@ -107,8 +138,8 @@ function id($x) {
 /**
  * Uses reflection to determine the number of required arguements for a callable
  * 
- * NOTE: This will NOT consider any arguments that are not required (i.e. that
- *       take default values if not given)
+ * NOTE: This will only consider *required* arguments, i.e. optional and variadic
+ *       arguments do *not* contribute to the count
  */
 function n_required_args(callable $f) {
     /*
@@ -135,33 +166,4 @@ function n_required_args(callable $f) {
     }
     
     return $reflector->getNumberOfRequiredParameters();
-}
-
-
-/**
- * Returns a new function where the arguments of $f are frozen with the given
- * arguments
- * 
- * Any arguments for which a value is not given or for which the placeholder
- * is given remain "free", and become arguments of the returned function
- */
-function partial(callable $f, ...$frozen) {
-    // If there are no frozen arguments, just return the function
-    if( empty($frozen) ) return $f;
-    
-    // Otherwise, return a function that replaces placeholders with the given
-    // arguments when it is executed
-    return function(...$args) use($f, $frozen) {
-        // Take a copy of the frozen arguments to modify
-        // This is so we don't touch $frozen so that the closure can be reused
-        $merged = $frozen;
-        
-        // Wherever there is a placeholder, replace it with a given argument
-        foreach( $merged as &$arg ) {
-            if( $arg instanceof Placeholder ) $arg = array_shift($args);
-        }
-
-        // Add the rest of the given arguments to the end of the call to $f
-        return $f(...$merged, ...$args);
-    };
 }
