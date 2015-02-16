@@ -189,6 +189,30 @@ This is the classic id function. It just returns its argument.
 
 ----
 
+**`memoize(callable $f)`**
+
+Returns a new function that caches the results of calls to the given function and returns them instead of calling the given function.
+
+As a result, `$f` is only ever called once for a given combination of arguments. This is useful with pure functions whose result is expensive to compute but depends only on the arguments.
+
+NOTE: It is only worth memoizing a function if it is frequently called with the same arguments and the result takes longer to compute than serializing the arguments and looking up the resulting key. It may be useful to profile your program first to see what functions might be candidates for memoization.
+
+Example:
+
+```php
+function factorial($n) {
+    if( $n <= 0 ) return 1;
+    return $n * factorial($n - 1);
+}
+
+$mem_fac = memoize('factorial');
+
+echo $mem_fac(10);  // Prints 3628800
+echo $mem_fac(10);  // Prints 3628800, but the result was loaded from cache
+```
+
+----
+
 **`n_required_args(callable $f)`**
 
 Uses reflection to determine the number of required arguements for a callable.

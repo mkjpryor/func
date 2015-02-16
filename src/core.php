@@ -136,6 +136,30 @@ function id($x) {
 
 
 /**
+ * Returns a new function that caches the results of calls to the given function
+ * and returns them instead of calling the given function
+ * 
+ * As a result, $f is only ever called once for a given combination of arguments
+ * 
+ * This is useful with pure functions whose result is expensive to compute
+ */
+function memoize(callable $f) {
+    return function() use($f) {
+        static $cache = [];
+
+        $args = func_get_args();
+        $key = md5(serialize($args));
+
+        if( !isset($cache[$key]) ) {
+            $cache[$key] = call_user_func_array($f, $args);
+        }
+        
+        return $cache[$key];
+    };
+}
+
+
+/**
  * Uses reflection to determine the number of required arguements for a callable
  * 
  * NOTE: This will only consider *required* arguments, i.e. optional and variadic
