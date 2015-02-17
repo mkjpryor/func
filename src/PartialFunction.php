@@ -50,13 +50,13 @@ final class PartialFunction {
         $bound = array_merge($bound, $args);
         
         // Take at most the number of args we need to call the function
-        $bound = array_slice($bound, 0, $this->required);
+        array_splice($bound, $this->required);
         
-        // If we don't have enough, return a new PF
+        // If we don't have enough, return a new partial
         if( count($bound) < $this->required )
             return new PartialFunction($this->fn, $bound, $this->required);
             
-        // If we have any placeholders left, return a new PF
+        // If we have any placeholders left, return a new partial
         foreach( $bound as $arg ) {
             if( $arg instanceof Placeholder ) {
                 return new PartialFunction($this->fn, $bound, $this->required);
@@ -64,6 +64,7 @@ final class PartialFunction {
         }
         
         // Otherwise, return the result of calling the function
-        return call_user_func_array($this->fn, $bound);
+        $f = &$this->fn;
+        return $f(...$bound);
     }
 }

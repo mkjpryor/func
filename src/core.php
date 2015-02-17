@@ -75,7 +75,9 @@ function compose(...$fns) {
         // NOTE: We know there is at least one function
         $result = $fns[0](...$args);
         // Apply the rest of the functions recursively
-        foreach( array_slice($fns, 1) as $f ) $result = $f($result);
+        for( $i = 1, $l = count($fns); $i < $l; $i++ ) {
+            $result = $fns[$i]($result);
+        }
         return $result;
     };
 }
@@ -121,8 +123,7 @@ function curry(callable $f, $n = -1) {
  */
 function flip(callable $f) {
     return function(...$args) use($f) {
-        $flipped = array_reverse($args);
-        return $f(...$flipped);
+        return $f(...array_reverse($args));
     };
 }
 
@@ -144,16 +145,13 @@ function id($x) {
  * This is useful with pure functions whose result is expensive to compute
  */
 function memoize(callable $f) {
-    return function() use($f) {
+    return function(...$args) use($f) {
         static $cache = [];
 
-        $args = func_get_args();
         $key = md5(serialize($args));
-
         if( !isset($cache[$key]) ) {
-            $cache[$key] = call_user_func_array($f, $args);
+            $cache[$key] = $f(...$args);
         }
-        
         return $cache[$key];
     };
 }
