@@ -191,11 +191,11 @@ This is the classic id function. It just returns its argument.
 
 **`memoize(callable $f)`**
 
-Returns a new function that caches the results of calls to the given function and returns them instead of calling the given function.
+Returns a new function that caches the results of calls to `$f` and returns them instead of calling `$f`.
 
 As a result, `$f` is only ever called once for a given combination of arguments. This is useful with pure functions whose result is expensive to compute but depends only on the arguments.
 
-NOTE: It is only worth memoizing a function if it is frequently called with the same arguments and the result takes longer to compute than serializing the arguments and looking up the resulting key. It may be useful to profile your program first to see what functions might be candidates for memoization.
+**NOTE:** It is only worth memoizing a function if it is frequently called with the same arguments and the result takes longer to compute than serializing the arguments and looking up the resulting key. It may be useful to profile your program first to see what functions might be candidates for memoization.
 
 Example:
 
