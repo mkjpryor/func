@@ -37,6 +37,40 @@ function auto_bind(callable $f, $n = -1) {
 
 
 /**
+ * This function applies auto_bind to all functions in the given namespace,
+ * creating an "auto-bound" version of each function in the same namespace with
+ * the given suffix
+ * 
+ * Optionally, functions can be excluded (i.e. auto-bound versions will not be
+ * created)
+ */
+function auto_bind_namespace($namespace, $suffix, $exclude = []) {
+    // Since we can't get functions by namespace, we must loop over all functions
+    foreach( get_defined_functions()["user"] as $full_name ) {
+        // Check if the function belongs to the given namespace
+        if( strncasecmp($full_name, $namespace, strlen($namespace)) == 0 ) {
+            // Get the actual function name
+            $name = substr($full_name, strlen($namespace) + 1);
+            
+            // If the function is an excluded function, try the next function
+            if( in_array($name, $exclude) ) continue;
+            
+            // Write the code to create the auto-bound function in the correct
+            // namespace
+            $code  = "namespace ${namespace};" . PHP_EOL;
+            $code .= "function ${name}${suffix}() {" . PHP_EOL;
+            $code .= "    static \$bound = null;" . PHP_EOL;
+            $code .= "    if( \$bound === null ) \$bound = \\". __NAMESPACE__ . "\\auto_bind('${full_name}');" . PHP_EOL;
+            $code .= "    return \$bound(...func_get_args());" . PHP_EOL;
+            $code .= "}";
+            // Eval the code... EVIL...!
+            eval($code);
+        }
+    }
+}
+
+
+/**
  * Returns a new auto-bound function (see above) with the first N arguments bound
  * to the given arguments
  * 
