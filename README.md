@@ -65,7 +65,9 @@ echo $tmp(2);
     
 Applies `auto_bind` to all the functions in the given namespace, creating an "auto-binding" version of each function in the same namespace with the given suffix.
 
-Optionally, functions can be excluded from this process using `$exclude` (i.e. auto-bound functions will not be created for the specified functions)
+Optionally, functions can be excluded from this process using `$exclude` (i.e. auto-bound functions will not be created for the specified functions).
+
+**NOTE: This uses eval.**
 
 Example:
 
