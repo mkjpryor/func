@@ -239,3 +239,19 @@ function n_required_args(callable $f) {
     
     return $reflector->getNumberOfRequiredParameters();
 }
+
+
+/**
+ * Given a function written in trampolined style, trampoline returns a new function
+ * that executes the trampolined function when called (i.e. iteratively executes
+ * the thunk-returning function until the result is no longer callable)
+ * 
+ * This can be used to emulate tail-recursion without blowing the stack
+ */
+function trampoline(callable $f) {
+    return function(...$args) use($f) {
+        $result = $f(...$args);
+        while( is_callable($result) ) $result = $result();
+        return $result;
+    };
+}

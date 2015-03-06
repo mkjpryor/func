@@ -230,3 +230,25 @@ function fun2(...$args) { return count($args); }
 
 echo n_required_args('fun2');  // Prints 0
 ```
+
+----
+
+**`trampoline(callable $f)`**
+
+Given a function written in trampolined style, `trampoline` returns a new function that executes the trampolined function when called (i.e. iteratively executes the thunk-returning function until the result is no longer callable).
+
+This can be used to emulate tail-recursion without blowing the stack - see the pseudo-recursive implementation of factorial below.
+
+Example:
+
+```php
+function factorial($n, $accum = 1) {
+    if( $n === 0 ) return $accum;
+    return function() use($n, $accum) {
+        return factorial($n - 1, $n * $accum);
+    };
+}
+
+$f = trampoline('factorial');
+echo $f(10);  // Prints 3628800
+```
