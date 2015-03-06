@@ -16,7 +16,10 @@ namespace Mkjp\FunctionUtils;
  *         use function Mkjp\FunctionUtils\_ as __;
  */
 function _() {
-    return Placeholder::get();
+    // Use a known stdClass instance as the placeholder
+    static $placeholder = null;
+    if( $placeholder === null ) $placeholder = new \stdClass;
+    return $placeholder;
 }
 
 
@@ -31,8 +34,36 @@ function _() {
  * 
  * See the README for example usage
  */
-function auto_bind(callable $f, $n = -1) {
-    return new PartialFunction($f, [], $n);
+function auto_bind(callable $f, $n = -1, array $bound = []) {
+    if( $n < 0 ) $n = n_required_args($f);
+    
+    return function(...$args) use($f, $n, $bound) {
+        // Copy the currently bound arguments so we are not modifying this function
+        $bound_c = $bound;
+        
+        // Merge in the args from the left, observing any placeholders
+        foreach( $bound_c as $pos => $arg ) {
+            if( count($args) <= 0 ) break;
+            if( $arg === _() ) $bound_c[$pos] = array_shift($args);
+        }
+        $bound_c = array_merge($bound_c, $args);
+        
+        // Take at most the number of args we need to call the function
+        array_splice($bound_c, $n);
+        
+        // If we don't have enough, return a new partial
+        if( count($bound_c) < $n ) return auto_bind($f, $n, $bound_c);
+            
+        // If we have any placeholders left, return a new partial
+        foreach( $bound_c as $arg ) {
+            if( $arg === _() ) {
+                return auto_bind($f, $n, $bound_c);
+            }
+        }
+        
+        // Otherwise, return the result of calling the function
+        return $f(...$bound_c);
+    };
 }
 
 
