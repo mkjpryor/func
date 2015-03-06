@@ -60,36 +60,34 @@ echo $tmp(2);
 ```
 
 ----
+    
+**`auto_bind_namespace($namespace, $suffix, $exclude = [])`**
+    
+Applies `auto_bind` to all the functions in the given namespace, creating an "auto-binding" version of each function in the same namespace with the given suffix.
 
-**`bind(callable $f, ...$args)`**
-
-Returns a new "auto-bound" function (see above) with the first N arguments of `$f` bound to the given arguments.
-
-This is equivalent to, but possibly more efficient than, creating an "auto-bound" function from `$f` and calling it with the given arguments:
-
-```php
-$fn = auto_bind($f);
-return $fn(...$args);
-```
-
-Unlike `auto_bind`, `bind` will only work with functions of an unambiguous arity, i.e. optional and variadic arguments will *not* be considered.
+Optionally, functions can be excluded from this process using `$exclude` (i.e. auto-bound functions will not be created for the specified functions)
 
 Example:
 
 ```php
-function fun1($a, $b, $c, $d) { return $a + $b + $c + $d; }
+namespace MyNamespace;
 
-// The following all print 10
-echo fun1(1, 2, 3, 4);
+function fun1($a, $b, $c) { return $a + $b + $c; }
+function fun2($a, $b, $c) { return $a * $b * $c; }
+function fun3($a, $b, $c) { return $a - $b - $c; }
 
-$tmp = bind('fun1', 1, _(), 3);
-echo $tmp(2, 4);
+// This creates auto-bound versions of fun1 and fun2 with the suffix _p in MyNamespace
+\Mkjp\FunctionUtils\auto_bind_namespace(__NAMESPACE__, "_p", ['fun3']);
 
-$tmp = bind('fun1', 1, _(), 3);
-$tmp = $tmp(_(), 4);
-echo $tmp(2);
+// Now we can use them
+echo \MyNamespace\fun1(1, 2, 3);  // Prints 6
+
+$f = \MyNamespace\fun1_p(1, 2);
+echo $f(3);                       // Prints 6
+
+$f = \MyNamespace\fun3_p(1, 2);   // No such function
 ```
-
+    
 ----
 
 **`compose(...$fns)`**

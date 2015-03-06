@@ -69,21 +69,6 @@ function auto_bind_namespace($namespace, $suffix, $exclude = []) {
     }
 }
 
-
-/**
- * Returns a new auto-bound function (see above) with the first N arguments bound
- * to the given arguments
- * 
- * NOTE: This function will only work with functions of an unambiguous arity, i.e.
- *       optional and variadic arguments will NOT be considered
- *       For this, you must manually create an auto_bound function, specifying the
- *       number of arguments to fill
- */
-function bind(callable $f, ...$args) {
-    return new PartialFunction($f, $args);
-}
-
-
 /**
  * Returns a new function that is the composition of the given functions from left
  * to right, i.e. the result of the first gets passed to the second, etc.
@@ -102,7 +87,7 @@ function bind(callable $f, ...$args) {
  */
 function compose(...$fns) {
     // If no functions are given, just use the id function
-    if( count($fns) < 1 ) $fns = ['Mkjp\FunctionUtils\id'];
+    if( count($fns) < 1 ) $fns = [ __NAMESPACE__ . '\\id' ];
     
     return function(...$args) use($fns) {
         // Do the first call manually by splatting the args
