@@ -242,13 +242,25 @@ This can be used to emulate tail-recursion without blowing the stack - see the p
 Example:
 
 ```php
-function factorial($n, $accum = 1) {
-    if( $n === 0 ) return $accum;
-    return function() use($n, $accum) {
-        return factorial($n - 1, $n * $accum);
+// This is the traditional tail-recursive fib, except PHP doesn't have tail-recursion
+function fib($n, $n_1 = 0, $n_2 = 1) {
+    if( $n === 0 ) return $n_1;
+    return fib($n - 1, $n_2, $n_1 + $n_2);
+};
+
+// This is the trampolined version
+function fib_trampoline($n, $n_1 = 0, $n_2 = 1) {
+    if( $n === 0 ) return $n_1;
+    return function() use($n, $n_1, $n_2) {
+        return fib_trampoline($n - 1, $n_2, $n_1 + $n_2);
     };
 }
 
-$f = trampoline('factorial');
-echo $f(10);  // Prints 3628800
+$fib_trampoline = trampoline('fib_trampoline');
+
+echo fib(10);              // Prints 55
+echo $fib_trampoline(10);  // Prints 55
+
+echo fib(200);              // BLOWS THE STACK!
+echo $fib_trampoline(200);  // Prints 2.8057117299251E+41
 ```
