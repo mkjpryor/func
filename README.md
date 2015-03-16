@@ -20,78 +20,26 @@ All functions are in the `Mkjp\FunctionUtils` namespace. To import them into you
 
 **`_()`**
 
-Returns a placeholder object for use with  below.
+Returns a placeholder object for use with `bind` below.
 
 ----
 
-**`auto_bind(callable $f, $n = -1)`**
+**`bind(callable $f, ...$bound)`**
 
-Returns a new "auto-binding" function that continues to accept arguments for `$f`, including placeholders, until it has enough bound arguments to call `$f`.
+Binds the first n arguments of `$f` to the given arguments, returning a new function that accepts the rest of the arguments before calling `$f`.
 
-An argument is considered bound when a value has been supplied for it that is not a placeholder.
-
-By default, the returned function only waits for the *required* arguments of `$f` to be bound. If `$n` is given, it will wait for exactly that many arguments to be bound before calling `$f`.
+When binding arguments, a placeholder (see `_()`) can be given to indicate that the argument will be given later.
 
 Example:
 
 ```php
-function fun1($a, $b, $c, $d = 0) { return $a + $b + $c + $d; }
+function add($a, $b, $c) { return $a + $b + $c; }
 
-// This only auto-binds the first 3 arguments
-$fn = auto_bind('fun1');
+$add = bind('add', 1, _(), 3);
 
-// The following both print 6
-echo $fn(1, 2, 3);
-
-$tmp = $fn(1, _(), 3);
-echo $tmp(2);
-
-
-// This auto-binds all 4 arguments
-$fn = auto_bind('fun1', 4);
-
-// The following all print 10
-echo $fn(1, 2, 3, 4);
-
-$tmp = $fn(1, _(), 3);
-echo $tmp(2, 4);
-
-$tmp = $fn(1, _(), 3);  // This shows how the "auto-binding" function continues
-$tmp = $tmp(_(), 4);    // to accept arguments until it can call $f
-echo $tmp(2);
+echo $add(2);  // Calls $f(1, 2, 3) and prints 6
 ```
 
-----
-    
-**`auto_bind_namespace($namespace, $suffix, $exclude = [])`**
-    
-Applies `auto_bind` to all the functions in the given namespace, creating an "auto-binding" version of each function in the same namespace with the given suffix.
-
-Optionally, functions can be excluded from this process using `$exclude` (i.e. auto-bound functions will not be created for the specified functions).
-
-**NOTE: This uses eval.**
-
-Example:
-
-```php
-namespace MyNamespace;
-
-function fun1($a, $b, $c) { return $a + $b + $c; }
-function fun2($a, $b, $c) { return $a * $b * $c; }
-function fun3($a, $b, $c) { return $a - $b - $c; }
-
-// This creates auto-bound versions of fun1 and fun2 with the suffix _p in MyNamespace
-\Mkjp\FunctionUtils\auto_bind_namespace(__NAMESPACE__, "_p", ['fun3']);
-
-// Now we can use them
-echo \MyNamespace\fun1(1, 2, 3);  // Prints 6
-
-$f = \MyNamespace\fun1_p(1, 2);
-echo $f(3);                       // Prints 6
-
-$f = \MyNamespace\fun3_p(1, 2);   // No such function
-```
-    
 ----
 
 **`compose(...$fns)`**

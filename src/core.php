@@ -24,21 +24,23 @@ function _() {
 
 
 /**
- * Returns a new function that continues to accept arguments to $f, including 
- * placeholders, until it has enough arguments to call $f
+ * Binds the first n arguments of $f to the given arguments, returning a new function
+ * that accepts the rest of the arguments before calling $f
  * 
- * By default, the returned function only waits for all the *required* arguments
- * to be bound
- * To auto-bind a function with optional or variadic arguments, the number of
- * arguments to bind can be specified
+ * When binding arguments, a placeholder (see _()) can be given to indicate that
+ * the argument will be filled later, e.g. to bind the first and third arguments
+ * of a function:
  * 
- * See the README for example usage
+ *     function add($a, $b, $c) { return $a + $b + $c; }
+ * 
+ *     $add = bind('add', 1, _(), 3);
+ * 
+ *     echo $add(2);  // Calls $f(1, 2, 3) and prints 6
  */
-function auto_bind(callable $f, $n = -1, array $bound = []) {
-    if( $n < 0 ) $n = n_required_args($f);
-    
-    return function(...$args) use($f, $n, $bound) {
-        // Copy the currently bound arguments so we are not modifying this function
+function bind(callable $f, ...$bound) {
+    return function(...$args) use($f, $bound) {
+        // Copy the currently bound arguments so we are not modifying the behaviour
+        // of this function (i.e. it can be called again)
         $bound_c = $bound;
         
         // Merge in the args from the left, observing any placeholders
@@ -48,57 +50,11 @@ function auto_bind(callable $f, $n = -1, array $bound = []) {
         }
         $bound_c = array_merge($bound_c, $args);
         
-        // Take at most the number of args we need to call the function
-        array_splice($bound_c, $n);
-        
-        // If we don't have enough, return a new partial
-        if( count($bound_c) < $n ) return auto_bind($f, $n, $bound_c);
-            
-        // If we have any placeholders left, return a new partial
-        foreach( $bound_c as $arg ) {
-            if( $arg === _() ) {
-                return auto_bind($f, $n, $bound_c);
-            }
-        }
-        
-        // Otherwise, return the result of calling the function
+        // Call the underlying function
         return $f(...$bound_c);
     };
 }
 
-
-/**
- * This function applies auto_bind to all functions in the given namespace,
- * creating an "auto-bound" version of each function in the same namespace with
- * the given suffix
- * 
- * Optionally, functions can be excluded (i.e. auto-bound versions will not be
- * created)
- */
-function auto_bind_namespace($namespace, $suffix, $exclude = []) {
-    // Since we can't get functions by namespace, we must loop over all functions
-    foreach( get_defined_functions()["user"] as $full_name ) {
-        // Check if the function belongs to the given namespace
-        if( strncasecmp($full_name, $namespace, strlen($namespace)) == 0 ) {
-            // Get the actual function name
-            $name = substr($full_name, strlen($namespace) + 1);
-            
-            // If the function is an excluded function, try the next function
-            if( in_array($name, $exclude) ) continue;
-            
-            // Write the code to create the auto-bound function in the correct
-            // namespace
-            $code  = "namespace ${namespace};" . PHP_EOL;
-            $code .= "function ${name}${suffix}() {" . PHP_EOL;
-            $code .= "    static \$bound = null;" . PHP_EOL;
-            $code .= "    if( \$bound === null ) \$bound = \\". __NAMESPACE__ . "\\auto_bind('${full_name}');" . PHP_EOL;
-            $code .= "    return \$bound(...func_get_args());" . PHP_EOL;
-            $code .= "}";
-            // Eval the code... EVIL...!
-            eval($code);
-        }
-    }
-}
 
 /**
  * Returns a new function that is the composition of the given functions from left
@@ -162,8 +118,7 @@ function curry(callable $f, $n = -1) {
     // Otherwise return a new function that gathers the arguments
     // We know that $f takes at least 2 arguments
     return function($x) use($f, $n) {
-        $fn = auto_bind($f, $n);
-        return curry($fn($x), $n - 1);
+        return curry(bind($f, $x), $n - 1);
     };
 }
 
