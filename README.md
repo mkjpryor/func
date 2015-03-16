@@ -1,6 +1,6 @@
 # `mkjpryor/function-utils`
 
-[![Build Status](https://travis-ci.org/mkjpryor/function-utils.svg?branch=master)](https://travis-ci.org/mkjpryor/function-utils)
+[![Build Status](https://travis-ci.org/mkjpryor/function-utils.svg?branch=master)](https://travis-ci.org/mkjpryor/function-utils) [![Coverage Status](https://coveralls.io/repos/mkjpryor/function-utils/badge.svg)](https://coveralls.io/r/mkjpryor/function-utils)
 
 This package provides some simple utilities for working with functions. It's purpose is to provide some of the core capabilities to enable a more functional style of programming.
 
